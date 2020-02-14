@@ -1,0 +1,36 @@
+#!/usr/bin/env bash 
+
+set -euo pipefail
+
+install() {
+    local install_type=$1   
+    [ "$install_type" != "version" ] && \
+	echo "install type, $install_type, is not supported" && \
+	exit 1   
+    
+    local version=$2
+    local install_path=$3
+    local download_url="https://github.com/adoble/adr-j/archive/${version}.tar.gz"
+    echo "-- Downloading adr-j from ${download_url}"
+    curl -sL "$download_url" | tar xz   
+
+    pushd adr-j-${version#v}
+    ./gradlew releaseJar
+    
+    local lib_dir=$install_path/lib
+    mkdir -p $lib_dir
+    cp build/releases/adr-j.jar $lib_dir
+
+    local bin_dir=$install_path/bin
+    mkdir -p $bin_dir
+    cat <<EOF > $bin_dir/adr
+#!/bin/bash
+java -jar $lib_dir/adr-j.jar "\$@"
+EOF
+    popd
+    chmod a+x $bin_dir/adr
+
+    rm -rf adr-j-${version#v}
+} 
+
+install "$ASDF_INSTALL_TYPE" "$ASDF_INSTALL_VERSION" "$ASDF_INSTALL_PATH" 
