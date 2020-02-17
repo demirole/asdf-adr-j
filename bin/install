@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-install() {
+process() {
     local install_type=$1   
     [ "$install_type" != "version" ] && \
 	echo "install type, $install_type, is not supported" && \
@@ -10,7 +10,9 @@ install() {
     
     local version=$2
     local install_path=$3
+
     local download_url="https://github.com/adoble/adr-j/archive/${version}.tar.gz"
+
     echo "-- Downloading adr-j from ${download_url}"
     curl -sL "$download_url" | tar xz   
 
@@ -23,14 +25,17 @@ install() {
 
     local bin_dir=$install_path/bin
     mkdir -p $bin_dir
-    cat <<EOF > $bin_dir/adr
+    
+    local exec_name=adr-j
+
+    cat <<EOF > $bin_dir/$exec_name
 #!/bin/bash
 java -jar $lib_dir/adr-j.jar "\$@"
 EOF
     popd
-    chmod a+x $bin_dir/adr
+    chmod a+x $bin_dir/$exec_name
 
     rm -rf adr-j-${version#v}
 } 
 
-install "$ASDF_INSTALL_TYPE" "$ASDF_INSTALL_VERSION" "$ASDF_INSTALL_PATH" 
+process "$ASDF_INSTALL_TYPE" "$ASDF_INSTALL_VERSION" "$ASDF_INSTALL_PATH" 
